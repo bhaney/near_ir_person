@@ -6,7 +6,7 @@ Configure this mlmodel service as a [modular resource](https://docs.viam.com/mod
 
 ## Getting started
 
-The first step is to configure a camera on your robot. [Here](https://docs.viam.com/components/camera/webcam/) is an example of how to configure a webcam. The next step is to configureboth the mlmodel service and a vision service. Remember the names given to the camera, mlmodel service, and vision service, it will be important later. 
+The first step is to configure a camera on your robot. [Here](https://docs.viam.com/components/camera/webcam/) is an example of how to configure a webcam. The next step is to configure both the mlmodel service and a vision service.
 
 > [!NOTE]  
 > Before configuring your mlmodel service or vision service, you must [create a robot](https://docs.viam.com/manage/fleet/robots/#add-a-new-robot).
