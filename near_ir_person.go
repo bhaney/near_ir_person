@@ -15,7 +15,7 @@ import (
 
 const modelPath = "./ir_mobilenet.onnx"
 
-var Model = resource.ModelNamespace("bhaney").WithFamily("mlmodel").WithModel("near_ir_person")
+var Model = resource.ModelNamespace("bhaney").WithFamily("mlmodel").WithModel("near-ir-person")
 var blank []uint8
 
 func init() {
