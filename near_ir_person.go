@@ -4,6 +4,7 @@ import (
 	"context"
 	"runtime"
 
+	"github.com/pkg/errors"
 	ort "github.com/yalue/onnxruntime_go"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/ml"
@@ -20,16 +21,10 @@ var blank []uint8
 func init() {
 	resource.RegisterService(mlmodel.API, Model, resource.Registration[mlmodel.Service, *Config]{
 		Constructor: func(ctx context.Context, deps resource.Dependencies, conf resource.Config, logger logging.Logger) (mlmodel.Service, error) {
-			newConf, err := resource.NativeConfig[*Config](conf)
-			if err != nil {
-				return nil, err
-			}
-
 			nirp, err := initModel(conf.ResourceName(), logger)
 			if err != nil {
 				return nil, err
 			}
-
 			return nirp, nil
 		},
 	})
@@ -60,14 +55,16 @@ func initModel(name resource.Name, logger logging.Logger) (*nearIRPerson, error)
 		return nil, err
 	}
 	ort.SetSharedLibraryPath(libPath)
-	err := ort.InitializeEnvironment()
+	err = ort.InitializeEnvironment()
 	if err != nil {
 		return nil, err
 	}
 	// create the metadata
 	nirp.metadata = createMetadata()
 	// declare the input Tensor for the near IR person model
+	// fill blank tensor with an "image" of the correct size
 	// the image
+	blank = make([]uint8, 300*300*3)
 	inputShape := ort.NewShape(1, 300, 300, 3)
 	inputTensor, err := ort.NewTensor(inputShape, blank)
 	if err != nil {
@@ -134,8 +131,8 @@ func initModel(name resource.Name, logger logging.Logger) (*nearIRPerson, error)
 	}
 	outputTensors[7] = outputTensor7
 
-	options, e := ort.NewSessionOptions()
-	if e != nil {
+	options, err := ort.NewSessionOptions()
+	if err != nil {
 		return nil, err
 	}
 
@@ -154,7 +151,10 @@ func initModel(name resource.Name, logger logging.Logger) (*nearIRPerson, error)
 			"num_detections",
 			"raw_detection_boxes",
 			"raw_detection_scores"},
-		[]ort.ArbitraryTensor{inputTensor}, arbitraryOutput, options)
+		[]ort.ArbitraryTensor{inputTensor},
+		arbitraryOutput,
+		options,
+	)
 
 	modelSes := modelSession{
 		Session: session,
@@ -181,22 +181,18 @@ func (nirp *nearIRPerson) Infer(ctx context.Context, tensors ml.Tensors) (ml.Ten
 	}
 	inTensor := nirp.session.Input.GetData()
 	copy(inTensor, input)
-	err := nirp.session.Session.Run()
+	err = nirp.session.Session.Run()
 	if err != nil {
 		return nil, err
 	}
 	outputData := make([][]float32, 0, 8)
 	for _, out := range nirp.session.Output {
-		if outData, ok := out.GetData().([]float32); ok {
-			outputData = append(outputData, outData)
-		} else {
-			return nil, errors.New("could not convert outputs tensor into []float32")
-		}
+		outputData = append(outputData, out.GetData())
 	}
-	return processOutputs(outputData)
+	return processOutput(outputData)
 }
 
-func processInput(inputs ml.Tensors) ([]uint8, error) {
+func processInput(tensors ml.Tensors) ([]uint8, error) {
 	var imageTensor *tensor.Dense
 	// if length of tensors is 1, just grab the first tensor
 	// if more than 1 grab the one called input tensor, or image
@@ -224,38 +220,38 @@ func processInput(inputs ml.Tensors) ([]uint8, error) {
 
 func processOutput(outputs [][]float32) (ml.Tensors, error) {
 	// there are 8 output tensors. Turn them into tensors with the right backing
-	outMap = ml.Tensors{}
+	outMap := ml.Tensors{}
 	outMap["detection_anchor_indices"] = tensor.New(
 		tensor.WithShape(1, 100),
-		tensors.WithBacking(outputs[0]),
+		tensor.WithBacking(outputs[0]),
 	)
 	outMap["location"] = tensor.New(
 		tensor.WithShape(1, 100, 4),
-		tensors.WithBacking(outputs[1]),
+		tensor.WithBacking(outputs[1]),
 	)
 	outMap["category"] = tensor.New(
 		tensor.WithShape(1, 100),
-		tensors.WithBacking(outputs[2]),
+		tensor.WithBacking(outputs[2]),
 	)
 	outMap["detection_multiclass_scores"] = tensor.New(
 		tensor.WithShape(1, 100, 2),
-		tensors.WithBacking(outputs[3]),
+		tensor.WithBacking(outputs[3]),
 	)
 	outMap["score"] = tensor.New(
 		tensor.WithShape(1, 100),
-		tensors.WithBacking(outputs[4]),
+		tensor.WithBacking(outputs[4]),
 	)
 	outMap["num_detections"] = tensor.New(
 		tensor.WithShape(1),
-		tensors.WithBacking(outputs[5]),
+		tensor.WithBacking(outputs[5]),
 	)
 	outMap["raw_detection_boxes"] = tensor.New(
-		tensor.WithShape(1, 1917, 2),
-		tensors.WithBacking(outputs[6]),
+		tensor.WithShape(1, 1917, 4),
+		tensor.WithBacking(outputs[6]),
 	)
 	outMap["raw_detection_scores"] = tensor.New(
 		tensor.WithShape(1, 1917, 2),
-		tensors.WithBacking(outputs[7]),
+		tensor.WithBacking(outputs[7]),
 	)
 	return outMap, nil
 }
@@ -271,16 +267,18 @@ func (nirp *nearIRPerson) Close(ctx context.Context) error {
 		return err
 	}
 	// destroy tensors
-	err := nirp.session.Output.Destroy()
-	if err != nil {
-		return err
+	for _, outTensor := range nirp.session.Output {
+		err = outTensor.Destroy()
+		if err != nil {
+			return err
+		}
 	}
-	err := nirp.session.Input.Destroy()
+	err = nirp.session.Input.Destroy()
 	if err != nil {
 		return err
 	}
 	// destroy environment
-	err := ort.DestroyEnvironment()
+	err = ort.DestroyEnvironment()
 	if err != nil {
 		return err
 	}
@@ -362,7 +360,7 @@ func createMetadata() mlmodel.MLMetadata {
 	out6 := mlmodel.TensorInfo{
 		Name:     "raw_detection_boxes",
 		DataType: "float32",
-		Shape:    []int{1, 1917, 2},
+		Shape:    []int{1, 1917, 4},
 	}
 	outputs = append(outputs, out6)
 	out7 := mlmodel.TensorInfo{
