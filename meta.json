@@ -1,0 +1,13 @@
+{
+  "module_id": "bijan:near-ir-person-detector",
+  "visibility": "public",
+  "url": "https://github.com/bhaney/near_ir_person/",
+  "description": "a standalone module for person detection with near IR cameras",
+  "models": [
+    {
+      "api": "rdk:service:mlmodel",
+      "model": "bijan:mlmodel:near-ir-person"
+    }
+  ],
+  "entrypoint": "module"
+}
