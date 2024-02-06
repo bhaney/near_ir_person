@@ -26,8 +26,8 @@ In order to see the detections from the model you will also need to create a vis
   "modules": [
     {
       "type": "registry",
-      "name": "bijan_near-ir-person-detector",
-      "module_id": "bijan:near-ir-person-detector",
+      "name": "viam_near-ir-person-detector",
+      "module_id": "viam-labs:near-ir-person-detector",
       "version": "0.0.2"
     }
   ],
@@ -36,7 +36,7 @@ In order to see the detections from the model you will also need to create a vis
       "name": "ir-person-mlmodel",
       "type": "mlmodel",
       "namespace": "rdk",
-      "model": "bijan:mlmodel:near-ir-person",
+      "model": "viam-labs:mlmodel:near-ir-person",
       "attributes": {}
     },
     {
@@ -69,5 +69,5 @@ This module expects one input tensor of the form `[1, 300, 300, 3]` i.e. a singl
 
 ## Visualize 
 
-Once the `bijan:mlmodel:near-ir-person` and `viam:vision:mlmodel` services are in use, configure a [transform camera](https://docs.viam.com/components/camera/transform/) detections appear in your robot's field of vision.
+Once the `viam-labs:mlmodel:near-ir-person` and `viam:vision:mlmodel` services are in use, configure a [transform camera](https://docs.viam.com/components/camera/transform/) detections appear in your robot's field of vision.
 

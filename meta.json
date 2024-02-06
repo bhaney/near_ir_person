@@ -1,7 +1,7 @@
 {
   "module_id": "bijan:near-ir-person-detector",
   "visibility": "public",
-  "url": "https://github.com/bhaney/near_ir_person/",
+  "url": "https://github.com/viam-labs/near_ir_person/",
   "description": "a standalone module for person detection with near IR cameras",
   "models": [
     {
