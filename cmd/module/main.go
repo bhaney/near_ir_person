@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 
-	"github.com/bhaney/near_ir_person"
+	"github.com/viam-labs/near_ir_person"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/module"
 	"go.viam.com/rdk/services/mlmodel"
