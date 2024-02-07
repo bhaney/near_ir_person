@@ -1,6 +1,6 @@
 # near-ir-person
 
-This is a standalone [ml service module](https://app.viam.com/module/bijan/near-ir-person-detector) that only detects people seen by a near infrared camera. The underlying model is an SSD mobilenet V2 architecture exported to an ONNX format. The bundles the ONNX runtime within it. 
+This is a standalone [ml service module](https://app.viam.com/module/viam-labs/near-ir-person-detector) that only detects people seen by a near infrared camera. The underlying model is an SSD mobilenet V2 architecture exported to an ONNX format. The bundles the ONNX runtime within it. 
 
 Configure this mlmodel service as a [modular resource](https://docs.viam.com/modular-resources/) and link it with the built-in `mlmodel` vision service to detect people when using a near infrared camera.
 
