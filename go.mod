@@ -1,4 +1,4 @@
-module github.com/bhaney/near_ir_person
+module github.com/viam-labs/near_ir_person
 
 go 1.21.6
 
