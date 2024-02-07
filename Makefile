@@ -22,3 +22,6 @@ onnxruntime-android-$(ONNX_VERSION).aar:
 third_party/onnx-android-$(SO_ARCH).so: onnxruntime-android-$(ONNX_VERSION).aar
 	unzip -o $< 'jni/*/*.so'
 	cp jni/$(SO_ARCH)/libonnxruntime.so $@
+
+bundle-droid-$(SO_ARCH).tar.gz: droid-mlmodel third_party/onnx-android-$(SO_ARCH).so ir_mobilenet.onnx
+	tar -czf $@ $^
