@@ -3,6 +3,7 @@ package near_ir_person
 import (
 	"context"
 	"runtime"
+	"strings"
 
 	"github.com/pkg/errors"
 	ort "github.com/yalue/onnxruntime_go"
@@ -301,6 +302,10 @@ func getSharedLibPath() (string, error) {
 			return "./third_party/onnxruntime_arm64.so", nil
 		}
 		return "./third_party/onnxruntime.so", nil
+	}
+	switch arch := strings.Join([]string{runtime.GOOS, runtime.GOARCH}, "-"); arch {
+	case "android-386":
+		return "./third_party/onnx-android-x86.so", nil
 	}
 	return "", errors.Errorf("Unable to find a version of the onnxruntime library supporting %s %s", runtime.GOOS, runtime.GOARCH)
 }
