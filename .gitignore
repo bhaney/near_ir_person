@@ -1,1 +1,3 @@
 droid-mlmodel
+*.aar
+jni/
