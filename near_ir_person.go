@@ -3,6 +3,7 @@ package near_ir_person
 import (
 	"context"
 	"runtime"
+	"strings"
 
 	"github.com/pkg/errors"
 	ort "github.com/yalue/onnxruntime_go"
@@ -21,7 +22,7 @@ var blank []uint8
 func init() {
 	resource.RegisterService(mlmodel.API, Model, resource.Registration[mlmodel.Service, *Config]{
 		Constructor: func(ctx context.Context, deps resource.Dependencies, conf resource.Config, logger logging.Logger) (mlmodel.Service, error) {
-			nirp, err := initModel(conf.ResourceName(), logger)
+			nirp, err := InitModel(conf.ResourceName(), logger)
 			if err != nil {
 				return nil, err
 			}
@@ -48,7 +49,7 @@ type nearIRPerson struct {
 	metadata mlmodel.MLMetadata
 }
 
-func initModel(name resource.Name, logger logging.Logger) (*nearIRPerson, error) {
+func InitModel(name resource.Name, logger logging.Logger) (*nearIRPerson, error) {
 	nirp := &nearIRPerson{name: name, logger: logger}
 	libPath, err := getSharedLibPath()
 	if err != nil {
@@ -301,6 +302,10 @@ func getSharedLibPath() (string, error) {
 			return "./third_party/onnxruntime_arm64.so", nil
 		}
 		return "./third_party/onnxruntime.so", nil
+	}
+	switch arch := strings.Join([]string{runtime.GOOS, runtime.GOARCH}, "-"); arch {
+	case "android-386":
+		return "./third_party/onnx-android-x86.so", nil
 	}
 	return "", errors.Errorf("Unable to find a version of the onnxruntime library supporting %s %s", runtime.GOOS, runtime.GOARCH)
 }

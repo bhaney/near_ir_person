@@ -1,0 +1,4 @@
+droid-mlmodel
+*.aar
+jni/
+bundle-*.tar.gz
