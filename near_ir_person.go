@@ -306,6 +306,9 @@ func getSharedLibPath() (string, error) {
 	switch arch := strings.Join([]string{runtime.GOOS, runtime.GOARCH}, "-"); arch {
 	case "android-386":
 		return "./third_party/onnx-android-x86.so", nil
+	case "android-arm64":
+		return "./third_party/onnx-android-arm64-v8a.so", nil
+
 	}
 	return "", errors.Errorf("Unable to find a version of the onnxruntime library supporting %s %s", runtime.GOOS, runtime.GOARCH)
 }
